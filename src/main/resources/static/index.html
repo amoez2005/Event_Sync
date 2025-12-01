@@ -44,7 +44,7 @@
 <script>
     const API_URL = "http://localhost:8080/events";
 
-    // FIXED: Renamed function definition here too
+
     async function submitNewEvent() {
         try {
             const title = document.getElementById('evtTitle').value;
@@ -71,7 +71,7 @@
     async function sendFeedback() {
         try {
             const id = document.getElementById('feedEventId').value;
-            // If ID is missing, stop here
+
             if (!id) { alert("Please enter an Event ID first!"); return; }
 
             const text = document.getElementById('feedText').value;
@@ -103,7 +103,7 @@
 
             const data = await response.json();
 
-            // Matches your new Java variable names
+            
             const html = `
                 <strong>Event:</strong> ${data.eventName}<br>
                 <strong>Reviews:</strong> ${data.totalReviews}<br>
