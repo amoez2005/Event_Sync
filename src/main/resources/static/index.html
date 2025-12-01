@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EventSync UI</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .card { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; border-radius: 8px; background: #f9f9f9; }
+        input, textarea, button { width: 100%; margin-bottom: 10px; padding: 8px; }
+        button { background: #006699; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { background: #004466; }
+        .result { margin-top: 10px; padding: 10px; background: #eef; display: none; border-left: 5px solid #006699; }
+    </style>
+</head>
+<body>
+
+<h1>EventSync Dashboard</h1>
+
+<div class="card">
+    <h3>1. Create Event</h3>
+    <input type="text" id="evtTitle" placeholder="Event Title (Required)">
+    <textarea id="evtDesc" placeholder="Description"></textarea>
+
+    <button onclick="submitNewEvent()">Create Event</button>
+
+    <div id="createResult" class="result"></div>
+</div>
+
+<div class="card">
+    <h3>2. Submit Feedback</h3>
+    <input type="number" id="feedEventId" placeholder="Event ID (e.g., 1)">
+    <textarea id="feedText" placeholder="Feedback Text"></textarea>
+    <button onclick="sendFeedback()">Analyze Sentiment</button>
+    <div id="feedbackResult" class="result"></div>
+</div>
+
+<div class="card">
+    <h3>3. Event Summary</h3>
+    <input type="number" id="sumEventId" placeholder="Event ID (e.g., 1)">
+    <button onclick="fetchSummary()">View Statistics</button>
+    <div id="summaryResult" class="result"></div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/events";
+
+    // FIXED: Renamed function definition here too
+    async function submitNewEvent() {
+        try {
+            const title = document.getElementById('evtTitle').value;
+            const desc = document.getElementById('evtDesc').value;
+
+            if (!title) { alert("Please enter a Title!"); return; }
+
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title, description: desc })
+            });
+
+            if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+
+            const data = await response.json();
+            showResult('createResult', `Success! Event Created. ID: <b>${data.id}</b>`);
+
+        } catch (error) {
+            alert("Failed: " + error.message);
+        }
+    }
+
+    async function sendFeedback() {
+        try {
+            const id = document.getElementById('feedEventId').value;
+            // If ID is missing, stop here
+            if (!id) { alert("Please enter an Event ID first!"); return; }
+
+            const text = document.getElementById('feedText').value;
+
+            const response = await fetch(`${API_URL}/${id}/feedback`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+
+            if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+
+            const data = await response.json();
+            showResult('feedbackResult', `Sentiment: <b>${data.sentiment}</b>`);
+
+        } catch (error) {
+            alert("Feedback Failed: " + error.message);
+        }
+    }
+
+    async function fetchSummary() {
+        try {
+            const id = document.getElementById('sumEventId').value;
+            if (!id) { alert("Please enter an Event ID first!"); return; }
+
+            const response = await fetch(`${API_URL}/${id}/summary`);
+
+            if (!response.ok) throw new Error(`Event ${id} not found`);
+
+            const data = await response.json();
+
+            // Matches your new Java variable names
+            const html = `
+                <strong>Event:</strong> ${data.eventName}<br>
+                <strong>Reviews:</strong> ${data.totalReviews}<br>
+                <strong>Stats:</strong> ${JSON.stringify(data.sentimentStats)}
+            `;
+            showResult('summaryResult', html);
+        } catch (error) {
+            alert("Summary Failed: " + error.message);
+        }
+    }
+
+    function showResult(id, html) {
+        const el = document.getElementById(id);
+        el.innerHTML = html;
+        el.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

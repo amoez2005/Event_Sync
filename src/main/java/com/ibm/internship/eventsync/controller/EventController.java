@@ -10,6 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/events")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class EventController {
 
